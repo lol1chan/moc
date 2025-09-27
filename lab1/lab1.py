@@ -1,22 +1,14 @@
 import csv
 from typing import List, Tuple
 
-# ----------------------------
-# Парсинг CSV для варіанта XX
-# ----------------------------
 
 def load_probabilities() -> Tuple[List[float], List[float]]:
-    """
-    Зчитує prob_XX.csv і повертає:
-      - p_plain: ймовірності відкритих текстів (довжина 20, float)
-      - p_key:   ймовірності ключів (довжина 20, float)
-    """
+
     path = f"prob_01.csv"
     rows: List[List[str]] = []
     with open(path, newline="", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         for row in reader:
-            # ігноруємо порожні рядки
             if not row or all(cell.strip() == "" for cell in row):
                 continue
             rows.append([cell.strip() for cell in row])
@@ -28,10 +20,7 @@ def load_probabilities() -> Tuple[List[float], List[float]]:
 
 
 def load_cipher_table() -> List[List[int]]:
-    """
-    Зчитує table_XX.csv і повертає 20×20 таблицю з int.
-    Стовпці — відкритий текст (j), рядки — ключ (i), елемент — індекс h шифротексту.
-    """
+
     path = f"table_01.csv"
     matrix: List[List[int]] = []
     with open(path, newline="", encoding="utf-8-sig") as f:
@@ -44,18 +33,41 @@ def load_cipher_table() -> List[List[int]]:
     return matrix
 
 
+
+def compute_joint_P_M_C(p_plain: List[float], p_key: List[float], table: List[List[int]]) -> List[List[float]]:
+
+    n = len(p_plain)
+    joint = [[0.0 for _ in range(n)] for _ in range(n)]
+    for m in range(n):
+        for i in range(len(p_key)):
+            c = table[i][m]
+            joint[m][c] += p_plain[m] * p_key[i]
+    return joint
+
+
+def compute_P_C(joint: List[List[float]]) -> List[float]:
+
+    n = len(joint)
+    P_C = [0.0 for _ in range(n)]
+    for m in range(n):
+        for c in range(n):
+            P_C[c] += joint[m][c]
+    return P_C
+
+
 def main():
     p_plain, p_key = load_probabilities()
     table = load_cipher_table()
+    joint = compute_joint_P_M_C(p_plain, p_key, table)
+    P_C = compute_P_C(joint)
+    print("P(C):", [f"{x:.6f}" for x in P_C])
+    print("P(M,C):")
+    for m, row in enumerate(joint):
+        print(m, [f"{x:.6f}" for x in row])
 
-    print(f"prob_01.csv: 2×20 (перевірено)")
-    print(f"  Σ P(plain) = {sum(p_plain):.6f}, Σ P(key) = {sum(p_key):.6f}")
-    print(f"table_01.csv: 20×20 (перевірено)")
 
-    # Приклад доступу: h для i-го ключа та j-го відкритого тексту
-    i, j = 0, 0  # 0-початкова індексація у Python
-    h = table[i][j]
-    print(f"Приклад: h = table[i={i+1}][j={j+1}] = {h}")
+
+
 
 if __name__ == "__main__":
     main()
