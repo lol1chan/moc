@@ -54,16 +54,29 @@ def compute_P_C(joint: List[List[float]]) -> List[float]:
             P_C[c] += joint[m][c]
     return P_C
 
+def compute_P_M_given_C(joint: List[List[float]], P_C: List[float]) -> List[List[float]]:
+
+    n = len(joint)
+    cond = [[0.0 for _ in range(n)] for _ in range(n)]
+    for m in range(n):
+        for c in range(n):
+            pc = P_C[c]
+            cond[m][c] = (joint[m][c] / pc) if pc > 0.0 else 0.0
+    return cond
+
+
+
 
 def main():
     p_plain, p_key = load_probabilities()
     table = load_cipher_table()
     joint = compute_joint_P_M_C(p_plain, p_key, table)
     P_C = compute_P_C(joint)
-    print("P(C):", [f"{x:.6f}" for x in P_C])
-    print("P(M,C):")
-    for m, row in enumerate(joint):
-        print(m, [f"{x:.6f}" for x in row])
+    cond = compute_P_M_given_C(joint, P_C)
+    print("P(M|C):")
+    for c in range(len(P_C)):
+        col = [f"{cond[m][c]:.6f}" for m in range(len(cond))]
+        print(c, col)
 
 
 
