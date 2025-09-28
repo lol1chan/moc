@@ -65,6 +65,21 @@ def compute_P_M_given_C(joint: List[List[float]], P_C: List[float]) -> List[List
     return cond
 
 
+def compute_deterministic_decision(cond: List[List[float]]):
+
+    n = len(cond)
+    best_m = [0 for _ in range(n)]
+    best_val = [0.0 for _ in range(n)]
+    for c in range(n):
+        m_star = 0
+        p_star = cond[0][c]
+        for m in range(1, n):
+            if cond[m][c] > p_star:
+                p_star = cond[m][c]
+                m_star = m
+        best_m[c] = m_star
+        best_val[c] = p_star
+    return best_m, best_val
 
 
 def main():
@@ -73,10 +88,17 @@ def main():
     joint = compute_joint_P_M_C(p_plain, p_key, table)
     P_C = compute_P_C(joint)
     cond = compute_P_M_given_C(joint, P_C)
-    print("P(M|C):")
+
+
+    best_m, best_val = compute_deterministic_decision(cond)
+    print("Deterministic δ_D(c) = argmax_m P(M|C=c):")
     for c in range(len(P_C)):
-        col = [f"{cond[m][c]:.6f}" for m in range(len(cond))]
-        print(c, col)
+        print(f"c={c} -> m*={best_m[c]} (P={best_val[c]:.6f})")
+
+    avg_correct = sum(P_C[c] * best_val[c] for c in range(len(P_C)))
+    bayes_risk_01 = 1.0 - avg_correct
+    print(f"Avg correct prob (deterministic): {avg_correct:.6f}")
+    print(f"Bayes risk (0-1 loss): {bayes_risk_01:.6f}")
 
 
 
