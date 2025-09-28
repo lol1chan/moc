@@ -82,6 +82,45 @@ def compute_deterministic_decision(cond: List[List[float]]):
     return best_m, best_val
 
 
+def compute_stochastic_decision(cond: List[List[float]], mode: str = "uniform") -> List[List[float]]:
+
+    n = len(cond)
+    delta = [[0.0 for _ in range(n)] for _ in range(n)]
+    for c in range(n):
+
+        p_star = max(cond[m][c] for m in range(n))
+        ties = [m for m in range(n) if abs(cond[m][c] - p_star) <= 1e-15]
+
+        if mode == "proportional" and len(ties) > 1:
+            s = sum(cond[m][c] for m in ties)
+            if s > 0.0:
+                for m in ties:
+                    delta[m][c] = cond[m][c] / s
+            else:
+                w = 1.0 / len(ties)
+                for m in ties:
+                    delta[m][c] = w
+        else:
+            w = 1.0 / len(ties)
+            for m in ties:
+                delta[m][c] = w
+    return delta
+
+
+def compute_avg_correct_from_delta(cond: List[List[float]], P_C: List[float], delta: List[List[float]]) -> float:
+
+    n = len(cond)
+    total = 0.0
+    for c in range(n):
+        inner = 0.0
+        for m in range(n):
+            inner += cond[m][c] * delta[m][c]
+        total += P_C[c] * inner
+    return total
+
+
+
+
 def main():
     p_plain, p_key = load_probabilities()
     table = load_cipher_table()
@@ -89,6 +128,7 @@ def main():
     P_C = compute_P_C(joint)
     cond = compute_P_M_given_C(joint, P_C)
 
+    # --- Deterministic decision function ---
 
     best_m, best_val = compute_deterministic_decision(cond)
     print("Deterministic δ_D(c) = argmax_m P(M|C=c):")
@@ -99,6 +139,25 @@ def main():
     bayes_risk_01 = 1.0 - avg_correct
     print(f"Avg correct prob (deterministic): {avg_correct:.6f}")
     print(f"Bayes risk (0-1 loss): {bayes_risk_01:.6f}")
+
+    # --- Stochastic decision function ---
+  
+    delta_S = compute_stochastic_decision(cond, mode="uniform")
+    
+    avg_correct_stoch = compute_avg_correct_from_delta(cond, P_C, delta_S)
+    bayes_risk_stoch = 1.0 - avg_correct_stoch
+
+    print("\nStochastic δ_S(m|c): mass on argmax M for each c (uniform split among ties)")
+    for c in range(len(P_C)):
+        support = [(m, delta_S[m][c]) for m in range(len(P_C)) if delta_S[m][c] > 0.0]
+        support_str = ", ".join(f"m={m}: {p:.6f}" for m, p in support)
+        print(f"c={c} -> {support_str}")
+
+    print(f"Avg correct prob (stochastic): {avg_correct_stoch:.6f}")
+    print(f"Bayes risk (0-1 loss, stochastic): {bayes_risk_stoch:.6f}")
+
+
+
 
 
 
