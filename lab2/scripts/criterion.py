@@ -1,6 +1,9 @@
 import itertools
 import csv
 from collections import Counter
+import zlib
+import lzma
+import bz2
 
 
 #بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
@@ -446,6 +449,175 @@ def criterion_index_of_coincidence(L_Ns, l=1, kI=0.01, output_path="./lab2/resul
     print(f"[✓] Criterion 4.0 results saved to: {output_path}")
 
 
+def criterion_empty_boxes5_0(
+    L_Ns,
+    SORTED_MONOGRAMS,
+    SORTED_BIGRAMS,
+    j_values_mono=[50],
+    j_values_bi=[50, 100, 200],
+    kempt_mono=5,
+    kempt_bi=20,
+    output_path="./lab2/results/error_probabilities5.0.csv"
+):
+    results = []
+
+    for L, N in L_Ns:
+        total = 0
+
+        H0_mono = {j: 0 for j in j_values_mono}
+        H1_mono = {j: [0] * 6 for j in j_values_mono}
+        H0_bi = {j: 0 for j in j_values_bi}
+        H1_bi = {j: [0] * 6 for j in j_values_bi}
+
+        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        with open(path, encoding="utf-8") as csv_file:
+            spamreader = csv.reader(csv_file, delimiter=';')
+            for row in spamreader:
+                if len(row) < 7:
+                    continue
+                total += 1
+
+                for j in j_values_mono:
+                    rare_mono = list(SORTED_MONOGRAMS.keys())[-j:]  
+                    for i in range(7):
+                        text = row[i]
+                        freq = Counter(text)
+                        fempt = sum(1 for m in rare_mono if freq.get(m, 0) == 0)
+                        if fempt <= kempt_mono:
+                            if i == 0:
+                                H0_mono[j] += 1
+                            else:
+                                H1_mono[j][i - 1] += 1
+
+                for j in j_values_bi:
+                    rare_bi = list(SORTED_BIGRAMS.keys())[-j:]  
+                    for i in range(7):
+                        text = row[i]
+                        bigrams = [text[k:k+2] for k in range(len(text) - 1)]
+                        freq = Counter(bigrams)
+                        fempt = sum(1 for b in rare_bi if freq.get(b, 0) == 0)
+                        if fempt <= kempt_bi:
+                            if i == 0:
+                                H0_bi[j] += 1
+                            else:
+                                H1_bi[j][i - 1] += 1
+
+        if total == 0:
+            print(f"L = {L}, N = {N} — No valid data found.")
+            continue
+
+        for j in j_values_mono:
+            P_type1_mono = 1 - (H0_mono[j] / total)
+            P_type2_mono = [H1_mono[j][i] / total for i in range(6)]
+            results.append([L, N, "mono", j, kempt_mono, P_type1_mono, *P_type2_mono])
+
+        for j in j_values_bi:
+            P_type1_bi = 1 - (H0_bi[j] / total)
+            P_type2_bi = [H1_bi[j][i] / total for i in range(6)]
+            results.append([L, N, "bi", j, kempt_bi, P_type1_bi, *P_type2_bi])
+
+    header = [
+        "L", "N", "type", "j", "kempt",
+        "P_type1",
+        "P_type2_1", "P_type2_2", "P_type2_3", "P_type2_4", "P_type2_5", "P_type2_6"
+    ]
+
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f, delimiter=';')
+        writer.writerow(header)
+        writer.writerows(results)
+
+    print(f"[✓] Criterion 5.0 results saved to: {output_path}")
+
+
+def compress_ratio(data: bytes, compressed: bytes):
+    """Обчислення коефіцієнта стиснення."""
+    if len(data) == 0:
+        return 1.0
+    return len(compressed) / len(data)
+
+
+def criterion_compression6_0(
+    L_Ns,
+    compression_algorithms=("lzma", "deflate", "bwt"),
+    threshold=0.8,
+    output_path="./lab2/results/error_probabilities6.0.csv"
+):
+    """
+    Критерій 6.0: стиснення тексту як ознака осмисленості.
+    - LZMA, DEFLATE, BWT
+    - threshold: якщо коеф. стиснення < threshold — вважаємо текст осмисленим (H0)
+    """
+
+    results = []
+
+    for L, N in L_Ns:
+        total = 0
+
+        # Лічильники для кожного алгоритму
+        stats = {
+            alg: {"H0": 0, "H1": [0] * 6}
+            for alg in compression_algorithms
+        }
+
+        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        with open(path, encoding="utf-8") as csv_file:
+            reader = csv.reader(csv_file, delimiter=';')
+            for row in reader:
+                if len(row) < 7:
+                    continue
+                total += 1
+
+                for alg in compression_algorithms:
+                    for i in range(7):
+                        text = row[i].encode("utf-8")
+
+                        # --- Стиснення ---
+                        if alg == "lzma":
+                            comp = lzma.compress(text)
+                        elif alg == "deflate":
+                            comp = zlib.compress(text, level=9)
+                        elif alg == "bwt":
+                            comp = bz2.compress(text)
+                        else:
+                            raise ValueError(f"Unknown algorithm: {alg}")
+
+                        ratio = compress_ratio(text, comp)
+
+                        # --- Критерій: менше threshold → осмислений (H0)
+                        if ratio < threshold:
+                            if i == 0:
+                                stats[alg]["H0"] += 1
+                            else:
+                                stats[alg]["H1"][i - 1] += 1
+
+        if total == 0:
+            print(f"[!] L={L}, N={N} — no data found")
+            continue
+
+        # --- Обчислення ймовірностей помилок ---
+        for alg in compression_algorithms:
+            P_type1 = 1 - (stats[alg]["H0"] / total)
+            P_type2 = [stats[alg]["H1"][i] / total for i in range(6)]
+            results.append([L, N, alg, threshold, P_type1, *P_type2])
+
+    # --- Запис результатів ---
+    header = [
+        "L", "N", "algorithm", "threshold",
+        "P_type1",
+        "P_type2_1", "P_type2_2", "P_type2_3", "P_type2_4", "P_type2_5", "P_type2_6"
+    ]
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f, delimiter=";")
+        writer.writerow(header)
+        writer.writerows(results)
+
+    print(f"[✓] Criterion 6.0 (compression) results saved to: {output_path}")
+
+
+
+
+
 criterion_most_frequent2_0(L_Ns=L_Ns, MONOGRAMS_MOST_FREQUENT=MONOGRAMS_MOST_FREQUENT, BIGRAMS_MOST_FREQUENT=BIGRAMS_MOST_FREQUENT)
 criterion_most_frequent2_1(L_Ns=L_Ns, MONOGRAMS_MOST_FREQUENT=MONOGRAMS_MOST_FREQUENT, BIGRAMS_MOST_FREQUENT=BIGRAMS_MOST_FREQUENT)
 criterion_most_frequent2_2(
@@ -464,3 +636,18 @@ criterion_most_frequent2_3(
 )
 criterion_index_of_coincidence(L_Ns=L_Ns, l=1, kI=0.01)
 
+criterion_empty_boxes5_0(
+    L_Ns=L_Ns,
+    SORTED_MONOGRAMS=SORTED_MONOGRAMS,
+    SORTED_BIGRAMS=SORTED_BIGRAMS,
+    j_values_mono=[30, 50],
+    j_values_bi=[50, 100, 200],
+    kempt_mono=3,
+    kempt_bi=10
+)
+
+criterion_compression6_0(
+    L_Ns=L_Ns,
+    compression_algorithms=("lzma", "deflate", "bwt"),
+    threshold=0.8
+)
