@@ -19,7 +19,7 @@ L_Ns = [
     (10000, 1000)
 ]
 
-with open("./lab2/data/another_zbirka_cleared.txt", encoding="utf-8") as file:
+with open("./lab2/data/franko_zbirka_cleared.txt", encoding="utf-8") as file:
     text = file.read().lower()
     text = "".join(ch for ch in text if ch in ALPHABET)
     count_chars = 0
@@ -37,9 +37,10 @@ with open("./lab2/data/another_zbirka_cleared.txt", encoding="utf-8") as file:
 
 SORTED_MONOGRAMS = dict(sorted(MONOGRAMS.items(), key=lambda value: value[1], reverse=True))
 SORTED_BIGRAMS = dict(sorted(BIGRAMS.items(), key=lambda value: value[1], reverse=True))
-MONOGRAMS_MOST_FREQUENT = list(itertools.islice(SORTED_MONOGRAMS, 15))
-BIGRAMS_MOST_FREQUENT = list(itertools.islice(SORTED_BIGRAMS, 80))
-
+MONOGRAMS_MOST_FREQUENT = list(itertools.islice(SORTED_MONOGRAMS, 5))
+BIGRAMS_MOST_FREQUENT = list(itertools.islice(SORTED_BIGRAMS, 5))
+print(SORTED_MONOGRAMS)
+print(SORTED_BIGRAMS)
 
 
 def criterion_most_frequent2_0(L_Ns, MONOGRAMS_MOST_FREQUENT, BIGRAMS_MOST_FREQUENT, output_path="./lab2/results/error_probabilities2.0.csv"):
