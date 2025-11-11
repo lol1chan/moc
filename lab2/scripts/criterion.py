@@ -8,7 +8,7 @@ import bz2
 
 #بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
 #CONSTANTS
-ALPHABET = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
+ALPHABET = "абвгдеєжзиіїйклмнопрстуфхцчшщьюя"
 GRAMS = [1, 2]
 MONOGRAMS = dict.fromkeys(ALPHABET, 0)
 BIGRAMS = dict.fromkeys([a + b for a, b in itertools.product(ALPHABET, repeat=2)], 0)
@@ -19,7 +19,7 @@ L_Ns = [
     (10000, 1000)
 ]
 
-with open("./lab2/data/franko_zbirka_cleared.txt", encoding="utf-8") as file:
+with open("/Users/yuriido/documents/labs/moc/lab2/data/franko_zbirka_cleared.txt", encoding="utf-8") as file:
     text = file.read().lower()
     text = "".join(ch for ch in text if ch in ALPHABET)
     count_chars = 0
@@ -43,7 +43,7 @@ print(SORTED_MONOGRAMS)
 print(SORTED_BIGRAMS)
 
 
-def criterion_most_frequent2_0(L_Ns, MONOGRAMS_MOST_FREQUENT, BIGRAMS_MOST_FREQUENT, output_path="./lab2/results/error_probabilities2.0.csv"):
+def criterion_most_frequent2_0(L_Ns, MONOGRAMS_MOST_FREQUENT, BIGRAMS_MOST_FREQUENT, output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities2.0.csv"):
     results = []
 
     for L, N in L_Ns:
@@ -54,7 +54,7 @@ def criterion_most_frequent2_0(L_Ns, MONOGRAMS_MOST_FREQUENT, BIGRAMS_MOST_FREQU
         H1_bi = [0] * 6
         total = 0
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             spamreader = csv.reader(csv_file, delimiter=';')
             for row in spamreader:
@@ -125,7 +125,7 @@ def criterion_most_frequent2_1(
     BIGRAMS_MOST_FREQUENT,
     kf_mono=5,
     kf_bi=20,
-    output_path="./lab2/results/error_probabilities2.1.csv"
+    output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities2.1.csv"
 ):
     results = []
 
@@ -136,7 +136,7 @@ def criterion_most_frequent2_1(
         H1_bi = [0] * 6
         total = 0
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             spamreader = csv.reader(csv_file, delimiter=';')
             for row in spamreader:
@@ -209,7 +209,7 @@ def criterion_most_frequent2_2(
     BIGRAMS_MOST_FREQUENT,
     kx_mono=2,
     kx_bi=1,
-    output_path="./lab2/results/error_probabilities2.2.csv"
+    output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities2.2.csv"
 ):
     results = []
 
@@ -220,7 +220,7 @@ def criterion_most_frequent2_2(
         H1_bi = [0] * 6
         total = 0
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             spamreader = csv.reader(csv_file, delimiter=';')
             for row in spamreader:
@@ -303,7 +303,7 @@ def criterion_most_frequent2_3(
     BIGRAMS_MOST_FREQUENT,
     kx_mono=1,
     kx_bi=1,
-    output_path="./lab2/results/error_probabilities2.3.csv"
+    output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities2.3.csv"
 ):
     results = []
 
@@ -314,7 +314,7 @@ def criterion_most_frequent2_3(
         H1_bi = [0] * 6
         total = 0
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             spamreader = csv.reader(csv_file, delimiter=';')
             for row in spamreader:
@@ -402,7 +402,7 @@ def index_of_coincidence(text, l=1):
     Il = sum(c*(c-1) for c in freq.values()) / (L*(L-1))
     return Il
 
-def criterion_index_of_coincidence(L_Ns, l=1, kI=0.01, output_path="./lab2/results/error_probabilities4.0.csv"):
+def criterion_index_of_coincidence(L_Ns, l=1, kI=0.01, output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities4.0.csv"):
     results = []
 
     for L, N in L_Ns:
@@ -410,7 +410,7 @@ def criterion_index_of_coincidence(L_Ns, l=1, kI=0.01, output_path="./lab2/resul
         H1 = [0] * 6  # для 6 спотворених варіантів
         total = 0
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             spamreader = csv.reader(csv_file, delimiter=';')
             for row in spamreader:
@@ -458,7 +458,7 @@ def criterion_empty_boxes5_0(
     j_values_bi=[50, 100, 200],
     kempt_mono=5,
     kempt_bi=20,
-    output_path="./lab2/results/error_probabilities5.0.csv"
+    output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities5.0.csv"
 ):
     results = []
 
@@ -470,7 +470,7 @@ def criterion_empty_boxes5_0(
         H0_bi = {j: 0 for j in j_values_bi}
         H1_bi = {j: [0] * 6 for j in j_values_bi}
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             spamreader = csv.reader(csv_file, delimiter=';')
             for row in spamreader:
@@ -542,7 +542,7 @@ def criterion_compression6_0(
     L_Ns,
     compression_algorithms=("lzma", "deflate", "bwt"),
     threshold=0.8,
-    output_path="./lab2/results/error_probabilities6.0.csv"
+    output_path="/Users/yuriido/documents/labs/moc/lab2/results/error_probabilities6.0.csv"
 ):
     """
     Критерій 6.0: стиснення тексту як ознака осмисленості.
@@ -561,7 +561,7 @@ def criterion_compression6_0(
             for alg in compression_algorithms
         }
 
-        path = f"./lab2/generated_texts/texts_L{L}_N{N}.csv"
+        path = f"/Users/yuriido/documents/labs/moc/lab2/generated_texts/texts_L{L}_N{N}.csv"
         with open(path, encoding="utf-8") as csv_file:
             reader = csv.reader(csv_file, delimiter=';')
             for row in reader:
